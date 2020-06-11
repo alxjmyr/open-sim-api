@@ -10,7 +10,7 @@ router: APIRouter = APIRouter()
 
 @router.post("/run-simulation", response_model=DesResponseModel)
 def run_de_simulation(input: DesInputModel) -> Dict:
-    sim_env = DiscreteEventEnvironment(processes=input.processes, sim_def=input.sim_def)
+    sim_env = DiscreteEventEnvironment(simulation_input=input)
     sim_env.run_environment()
 
     response_value = {
