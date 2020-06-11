@@ -13,3 +13,16 @@ class QueueInput(BaseModel):
     def queue_type_validator(cls, queue_type: str) -> str:
         assert queue_type in ['continuous']
         return queue_type
+
+
+class QueueStateOutput(BaseModel):
+    name: str
+    capacity: Union[int, float]
+    current_value: Union[int, float]
+    queue_type: str
+    sim_epoch: int
+
+    @validator('queue_type')
+    def queue_type_validator(cls, queue_type: str) -> str:
+        assert queue_type in ['continuous']
+        return queue_type

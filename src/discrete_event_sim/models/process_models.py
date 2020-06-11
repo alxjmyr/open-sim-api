@@ -9,3 +9,14 @@ class ProcessObject(BaseModel):
     rate: float
     input_queue: Optional[str]
     output_queue: str
+
+
+class ProcessOutput(BaseModel):
+    name: str
+    process_start: int
+    process_end: int
+    input_queue: Optional[str]
+    output_queue: Optional[str]
+    process_value: float
+    configured_rate: float
+    configured_duration: int

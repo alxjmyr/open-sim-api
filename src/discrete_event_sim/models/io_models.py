@@ -2,8 +2,8 @@ from typing import List
 
 from pydantic import BaseModel
 
-from .process_models import ProcessObject
-from .queue_models import QueueInput
+from .process_models import ProcessObject, ProcessOutput
+from .queue_models import QueueInput, QueueStateOutput
 from .sim_models import SimInfo
 
 
@@ -14,4 +14,6 @@ class DesInputModel(BaseModel):
 
 
 class DesResponseModel(BaseModel):
-    message: str
+    process_output: List[ProcessOutput]
+    queue_output: List[QueueStateOutput]
+    sim_def: SimInfo
