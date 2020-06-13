@@ -4,6 +4,7 @@ from simpy import Environment
 from simpy.resources.container import Container
 
 from src.api_logger import logger
+from .des_queues import ContinuousQueue
 from .models.io_models import DesInputModel
 from .models.process_models import ProcessObject, ProcessOutput
 from .models.queue_models import QueueStateOutput
@@ -22,12 +23,20 @@ class DiscreteEventEnvironment(object):
         self.append_process_output = self.process_output.append
         self.append_queue_output = self.queue_output.append
 
-    def env_create_queues(self) -> None:
+    def env_establish_queues(self) -> None:
 
         for queue in self.queue_input:
-            self.queue_dict[queue.name] = Container(env=self.simpy_env,
-                                                    capacity=queue.capacity,
-                                                    init=queue.inital_value)
+
+            if queue.queue_type == 'continuous':
+                new_queue = ContinuousQueue(
+                        env=self.simpy_env,
+                        capacity=queue.capacity,
+                        init=queue.inital_value,
+                        name=queue.name,
+                        queue_type=queue.queue_type
+                )
+
+                self.queue_dict[queue.name] = new_queue
 
     def _check_queue_state(self, env: Environment) -> Generator:
         while True:
@@ -49,11 +58,11 @@ class DiscreteEventEnvironment(object):
             # get necessary amount from input queue
             process_start = env.now
             if process_def.input_queue:
-                self.queue_dict[process_def.input_queue].get(process_def.rate)
+                yield self.queue_dict[process_def.input_queue].get(process_def.rate)
 
             yield env.timeout(process_def.duration)
 
-            self.queue_dict[process_def.output_queue].put(process_def.rate)
+            yield self.queue_dict[process_def.output_queue].put(process_def.rate)
             process_end = env.now
 
             process_output = ProcessOutput(
@@ -74,7 +83,7 @@ class DiscreteEventEnvironment(object):
 
     def run_environment(self) -> None:
         logger.info("Creating environment queues")
-        self.env_create_queues()
+        self.env_establish_queues()
         logger.info("Creating environment processes")
         self.env_add_processes()
 
