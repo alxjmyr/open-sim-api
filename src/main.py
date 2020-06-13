@@ -5,7 +5,7 @@ from src.api import core, discrete_event
 app: FastAPI = FastAPI(
         title="Open Sim",
         description="Open Sim provides simulation as a service in a composeable HTTP API",
-        version="0.1.0beta",
+        version="0.1.0alpha",
         docs_url=None,
         redoc_url="/documentation"
 )

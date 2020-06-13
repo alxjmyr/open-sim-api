@@ -54,7 +54,7 @@ class DiscreteEventEnvironment(object):
 
     def process_wrapper(self, env: Environment, process_def: ProcessObject) -> Generator:
         while True:
-            logger.info('{process} || {time}'.format(process=process_def.name, time=env.now))
+            logger.debug('{process} || {time}'.format(process=process_def.name, time=env.now))
             # get necessary amount from input queue
             process_start = env.now
             if process_def.input_queue:
@@ -90,5 +90,5 @@ class DiscreteEventEnvironment(object):
         logger.info("Setting up queue state logger")
         self.simpy_env.process(self._check_queue_state(env=self.simpy_env))
 
-        logger.info("Running Simulation Environment for {n} epochs".format(n=self.sim_def.epochs))
-        self.simpy_env.run(until=self.sim_def.epochs)
+        logger.info("Running Simulation Environment for {n} epochs".format(n=self.sim_def.iterations))
+        self.simpy_env.run(until=self.sim_def.iterations)
