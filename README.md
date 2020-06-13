@@ -4,6 +4,8 @@ Open sim aims to create a viable simulation as a service platform that enables l
 ## Model Offerings
 Currently supports discrete event simulations but there are opportunities to build support for system dynamics and agent based simulations in the future.
 
+## Service Documentation
+API documentation based on the open API spec is available at `/documentation` on a running instance of the Open Sim service
 
 ## Discrete Event Simulation
 Open sim can create and run discrete event simulations using a `JSON` body in a request to compose the simulation structure and environment.
