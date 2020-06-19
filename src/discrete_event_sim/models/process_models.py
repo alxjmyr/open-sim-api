@@ -1,4 +1,5 @@
 from typing import List, Optional, Union
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -15,7 +16,6 @@ class ProcessObject(BaseModel):
     input_queues: Optional[List[ProcessInputQueue]]
     output_queue: str
     required_resource: Optional[str]
-    resource_duration: int = 0
 
 
 class ProcessOutput(BaseModel):
@@ -28,3 +28,4 @@ class ProcessOutput(BaseModel):
     process_value: float
     configured_rate: float
     configured_duration: int
+    uuid: UUID

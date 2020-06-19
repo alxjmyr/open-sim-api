@@ -1,4 +1,5 @@
 from typing import Dict, Generator, List
+from uuid import uuid4
 
 from simpy import Environment
 
@@ -57,7 +58,8 @@ class DiscreteEventEnvironment(object):
                         capacity=queue.capacity,
                         current_value=queue.level,
                         queue_type='continuous',
-                        sim_epoch=env.now
+                        sim_epoch=env.now,
+                        uuid=uuid4()
                 )
 
                 self.append_queue_output(queue_state)
@@ -86,7 +88,8 @@ class DiscreteEventEnvironment(object):
                     rate=process_def.rate,
                     process_value=process_def.rate,
                     configured_rate=process_def.rate,
-                    configured_duration=process_def.duration
+                    configured_duration=process_def.duration,
+                    uuid=uuid4()
             )
             self.append_process_output(process_output)
 
@@ -101,12 +104,16 @@ class DiscreteEventEnvironment(object):
                     yield self.queue_dict[queue.name].get(queue.rate)
 
             if process_def.required_resource:
+                logger.debug('{process} acquiring {resource} || {time}'.format(process=process_def.name,
+                                                                               resource=process_def.required_resource,
+                                                                               time=env.now))
                 with self.resource_dict[process_def.required_resource].request() as request:
                     yield request
 
-                    yield env.timeout(process_def.resource_duration)
-
-            yield env.timeout(process_def.duration)
+                    logger.debug('{process} has {resource} executing process || {time}'.format(process=process_def.name,
+                                                                                               resource=process_def.required_resource,
+                                                                                               time=env.now))
+                    yield env.timeout(process_def.duration)
 
             yield self.queue_dict[process_def.output_queue].put(process_def.rate)
             process_end = env.now
@@ -120,7 +127,8 @@ class DiscreteEventEnvironment(object):
                     rate=process_def.rate,
                     process_value=process_def.rate,
                     configured_rate=process_def.rate,
-                    configured_duration=process_def.duration
+                    configured_duration=process_def.duration,
+                    uuid=uuid4()
             )
             self.append_process_output(process_output)
 
