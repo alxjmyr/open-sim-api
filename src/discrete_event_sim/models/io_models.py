@@ -1,15 +1,17 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
 from .process_models import ProcessObject, ProcessOutput
 from .queue_models import QueueInput, QueueStateOutput
+from .resource_models import BasicResource
 from .sim_models import SimInfo
 
 
 class DesInputModel(BaseModel):
     processes: List[ProcessObject]
     queues: List[QueueInput]
+    resources: Optional[List[BasicResource]]
     sim_def: SimInfo
 
 
