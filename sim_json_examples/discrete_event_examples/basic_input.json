@@ -1,0 +1,36 @@
+{
+  "processes": [
+    {
+      "name": "Pick",
+      "duration": 1,
+      "rate": 1,
+      "output_queue": "ship_staging"
+    },
+    {
+      "name": "Ship",
+      "duration": 1,
+      "rate": 3,
+      "input_queue": "ship_staging",
+      "output_queue": "shipped"
+    }
+  ],
+  "queues": [
+    {
+      "name": "shipped",
+      "capacity": 10000,
+      "inital_value": 0,
+      "queue_type": "continuous"
+    },
+    {
+      "name": "ship_staging",
+      "capacity": 200,
+      "inital_value": 30,
+      "queue_type": "continuous"
+    }
+  ],
+  "sim_def": {
+    "name": "Clock Sim",
+    "iterations": 100,
+    "time_unit": "seconds"
+  }
+}

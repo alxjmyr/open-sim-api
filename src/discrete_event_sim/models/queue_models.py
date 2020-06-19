@@ -1,4 +1,5 @@
 from typing import Union
+from uuid import UUID
 
 from pydantic import BaseModel, validator
 
@@ -21,6 +22,7 @@ class QueueStateOutput(BaseModel):
     current_value: Union[int, float]
     queue_type: str
     sim_epoch: int
+    uuid: UUID
 
     @validator('queue_type')
     def queue_type_validator(cls, queue_type: str) -> str:

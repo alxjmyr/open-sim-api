@@ -1,0 +1,57 @@
+{
+  "processes": [
+    {
+      "name": "Picker1",
+      "duration": 1,
+      "rate": 1,
+      "output_queue": "ship_staging",
+      "required_resource": "stock_picking_carts"
+    },
+    {
+      "name": "Picker2",
+      "duration": 1,
+      "rate": 1,
+      "output_queue": "ship_staging",
+      "required_resource": "stock_picking_carts"
+    },
+    {
+      "name": "Picker3",
+      "duration": 1,
+      "rate": 1,
+      "output_queue": "ship_staging",
+      "required_resource": "stock_picking_carts"
+    },
+    {
+      "name": "Ship",
+      "duration": 1,
+      "rate": 3,
+      "input_queue": "ship_staging",
+      "output_queue": "shipped"
+    }
+  ],
+  "queues": [
+    {
+      "name": "shipped",
+      "capacity": 10000,
+      "inital_value": 0,
+      "queue_type": "continuous"
+    },
+    {
+      "name": "ship_staging",
+      "capacity": 200,
+      "inital_value": 30,
+      "queue_type": "continuous"
+    }
+  ],
+  "resources": [
+    {
+      "name": "stock_picking_carts",
+      "capacity": 2
+    }
+  ],
+  "sim_def": {
+    "name": "Clock Sim",
+    "iterations": 100,
+    "time_unit": "seconds"
+  }
+}
