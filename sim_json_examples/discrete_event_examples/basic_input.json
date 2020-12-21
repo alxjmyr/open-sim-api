@@ -3,15 +3,28 @@
     {
       "name": "Pick",
       "duration": 1,
-      "rate": 1,
-      "output_queue": "ship_staging"
+      "output_queue": [
+        {
+          "name": "ship_staging",
+          "rate": 3
+        }
+      ]
     },
     {
       "name": "Ship",
       "duration": 1,
-      "rate": 3,
-      "input_queue": "ship_staging",
-      "output_queue": "shipped"
+      "input_queue": [
+        {
+          "name": "ship_staging",
+          "rate": 3
+        }
+      ],
+      "output_queue": [
+        {
+          "name": "shipped",
+          "rate": 3
+        }
+      ]
     }
   ],
   "queues": [
@@ -29,7 +42,7 @@
     }
   ],
   "sim_def": {
-    "name": "Clock Sim",
+    "name": "Pick and Ship Simulation",
     "iterations": 100,
     "time_unit": "seconds"
   }

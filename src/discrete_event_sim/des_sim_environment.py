@@ -76,22 +76,24 @@ class DiscreteEventEnvironment(object):
 
             yield env.timeout(process_def.duration)
 
-            yield self.queue_dict[process_def.output_queue].put(process_def.rate)
-            process_end = env.now
+            for output_queue in process_def.output_queue:
+                yield self.queue_dict[output_queue.name].put(output_queue.rate)
 
-            process_output = ProcessOutput(
-                    name=process_def.name,
-                    process_start=process_start,
-                    process_end=process_end,
-                    input_queue=process_def.input_queues,
-                    output_queue=process_def.output_queue,
-                    rate=process_def.rate,
-                    process_value=process_def.rate,
-                    configured_rate=process_def.rate,
-                    configured_duration=process_def.duration,
-                    uuid=uuid4()
-            )
-            self.append_process_output(process_output)
+                process_end = env.now
+
+                process_output = ProcessOutput(
+                        name=process_def.name,
+                        process_start=process_start,
+                        process_end=process_end,
+                        input_queue=process_def.input_queues,
+                        output_queue=output_queue,
+                        rate=output_queue.rate,
+                        process_value=output_queue.rate,
+                        configured_rate=output_queue.rate,
+                        configured_duration=process_def.duration,
+                        uuid=uuid4()
+                )
+                self.append_process_output(process_output)
 
     def _resource_constrained_process_wrapper(self, env: Environment, process_def: ProcessObject) -> Generator:
         while True:
@@ -115,22 +117,24 @@ class DiscreteEventEnvironment(object):
                                                                                                time=env.now))
                     yield env.timeout(process_def.duration)
 
-            yield self.queue_dict[process_def.output_queue].put(process_def.rate)
-            process_end = env.now
+            for output_queue in process_def.output_queue:
+                yield self.queue_dict[output_queue.name].put(output_queue.rate)
 
-            process_output = ProcessOutput(
-                    name=process_def.name,
-                    process_start=process_start,
-                    process_end=process_end,
-                    input_queue=process_def.input_queues,
-                    output_queue=process_def.output_queue,
-                    rate=process_def.rate,
-                    process_value=process_def.rate,
-                    configured_rate=process_def.rate,
-                    configured_duration=process_def.duration,
-                    uuid=uuid4()
-            )
-            self.append_process_output(process_output)
+                process_end = env.now
+
+                process_output = ProcessOutput(
+                        name=process_def.name,
+                        process_start=process_start,
+                        process_end=process_end,
+                        input_queue=process_def.input_queues,
+                        output_queue=output_queue,
+                        rate=output_queue.rate,
+                        process_value=output_queue.rate,
+                        configured_rate=output_queue.rate,
+                        configured_duration=process_def.duration,
+                        uuid=uuid4()
+                )
+                self.append_process_output(process_output)
 
     def env_add_processes(self) -> None:
         for process in self.process_input:
@@ -154,5 +158,5 @@ class DiscreteEventEnvironment(object):
         logger.info("Setting up queue state logger")
         self.simpy_env.process(self._check_queue_state(env=self.simpy_env))
 
-        logger.info("Running Simulation Environment for {n} epochs".format(n=self.sim_def.iterations))
-        self.simpy_env.run(until=self.sim_def.iterations)
+        logger.info("Running Simulation Environment for {n} epochs".format(n=self.sim_def.epochs))
+        self.simpy_env.run(until=self.sim_def.epochs)

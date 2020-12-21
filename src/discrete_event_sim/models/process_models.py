@@ -4,7 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-class ProcessInputQueue(BaseModel):
+class ProcessQueue(BaseModel):
     name: str
     rate: Union[int, float]
 
@@ -12,9 +12,8 @@ class ProcessInputQueue(BaseModel):
 class ProcessObject(BaseModel):
     name: str
     duration: int
-    rate: float
-    input_queues: Optional[List[ProcessInputQueue]]
-    output_queue: str
+    input_queues: Optional[List[ProcessQueue]]
+    output_queue: List[ProcessQueue]
     required_resource: Optional[str]
 
 
@@ -22,9 +21,8 @@ class ProcessOutput(BaseModel):
     name: str
     process_start: int
     process_end: int
-    input_queue: Optional[List[ProcessInputQueue]]
-    output_queue: Optional[str]
-    rate: float
+    input_queue: Optional[List[ProcessQueue]]
+    output_queue: ProcessQueue
     process_value: float
     configured_rate: float
     configured_duration: int

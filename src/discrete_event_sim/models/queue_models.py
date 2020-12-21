@@ -6,7 +6,7 @@ from pydantic import BaseModel, validator
 
 class QueueInput(BaseModel):
     name: str
-    capacity: Union[int, float]
+    capacity: Union[int, float]  # capacity of -1 will set queue capacity to infinity
     inital_value: Union[int, float]
     queue_type: str
 
