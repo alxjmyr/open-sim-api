@@ -3,7 +3,8 @@ from setuptools import find_packages, setup
 dependancies = [
     'fastapi[all]==0.55.1',
     'simpy==4.0.1',
-    'uvicorn==0.11.5'
+    'uvicorn==0.11.5',
+    'numpy==1.19.4'
 ]
 
 setup(

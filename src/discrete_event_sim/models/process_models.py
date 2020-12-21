@@ -1,19 +1,32 @@
-from typing import List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
+
+
+class RateDurationModel(BaseModel):
+    type: str
+    static_value: Optional[Union[int, float]]
+    expression = ""
+    kwargs: Optional[Dict[str, Union[int, float]]]
+    expression_callable: Optional[Callable[[Any], Union[int, float]]]
+
+    @validator('type')
+    def queue_type_validator(cls, type: str) -> str:
+        assert type in ['static', 'expression']
+        return type
 
 
 class ProcessQueue(BaseModel):
     name: str
-    rate: Union[int, float]
+    rate: RateDurationModel
 
 
 class ProcessObject(BaseModel):
     name: str
     duration: int
     input_queues: Optional[List[ProcessQueue]]
-    output_queue: List[ProcessQueue]
+    output_queues: List[ProcessQueue]
     required_resource: Optional[str]
 
 
