@@ -20,11 +20,19 @@
       "name": "Ship",
       "duration": 1,
       "input_queue_selection": {
-        "type": "all"
+        "type": "expression",
+        "expression": "lambda **kwargs : 1 if kwargs['now'] >= 10 else 0"
       },
       "input_queues": [
         {
           "name": "ship_staging",
+          "rate": {
+            "type": "static",
+            "static_value": 3
+          }
+        },
+        {
+          "name": "ship_ready",
           "rate": {
             "type": "static",
             "static_value": 3
@@ -57,10 +65,16 @@
       "capacity": 200,
       "inital_value": 30,
       "queue_type": "continuous"
+    },
+    {
+      "name": "ship_ready",
+      "capacity": -1,
+      "inital_value": 100,
+      "queue_type": "continuous"
     }
   ],
   "sim_def": {
-    "name": "Pick and Ship Simulation",
+    "name": "Pick and Ship with Conditional Queue Selection",
     "epochs": 100,
     "time_unit": "seconds"
   }

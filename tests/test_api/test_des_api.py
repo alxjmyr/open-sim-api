@@ -1,4 +1,12 @@
-{
+import json
+
+from fastapi.testclient import TestClient
+
+from src.main import app
+
+client = TestClient(app)
+
+des_json_input = """{
   "processes": [
     {
       "name": "Pick",
@@ -61,7 +69,35 @@
   ],
   "sim_def": {
     "name": "Pick and Ship Simulation",
-    "epochs": 100,
+    "epochs": 25,
     "time_unit": "seconds"
   }
-}
+}"""
+
+
+def test_des():
+    """
+    High level test of DES endpoint functionality
+    :return:
+    """
+    response = client.post(
+            "/discrete-event/run-simulation",
+            headers={"Content-Type": "application/json"},
+            json=json.loads(des_json_input),
+    )
+
+    data = response.json()
+
+    assert response.status_code == 201
+
+    assert "process_output" in data.keys()
+    assert type(data['process_output']) == list
+    assert len(data['process_output']) == 48
+
+    assert "queue_output" in data.keys()
+    assert type(data['queue_output']) == list
+    assert len(data['queue_output']) == 50
+
+    assert "sim_def" in data.keys()
+    assert type(data['sim_def']) == dict
+    assert len(data['sim_def']) == 3

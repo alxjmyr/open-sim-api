@@ -3,30 +3,84 @@
     {
       "name": "Picker1",
       "duration": 1,
-      "rate": 1,
-      "output_queue": "ship_staging",
-      "required_resource": "stock_picking_carts"
+      "output_queue_selection": {
+        "type": "all"
+      },
+      "output_queues": [
+        {
+          "name": "ship_staging",
+          "rate": {
+            "type": "static",
+            "static_value": 1
+          }
+        }
+      ],
+      "required_resource": "stock_picking_cart"
     },
     {
       "name": "Picker2",
       "duration": 1,
-      "rate": 1,
-      "output_queue": "ship_staging",
-      "required_resource": "stock_picking_carts"
+      "output_queue_selection": {
+        "type": "all"
+      },
+      "output_queues": [
+        {
+          "name": "ship_staging",
+          "rate": {
+            "type": "static",
+            "static_value": 4
+          }
+        }
+      ],
+      "required_resource": "stock_picking_cart"
     },
     {
       "name": "Picker3",
       "duration": 1,
-      "rate": 1,
-      "output_queue": "ship_staging",
-      "required_resource": "stock_picking_carts"
+      "output_queue_selection": {
+        "type": "all"
+      },
+      "output_queues": [
+        {
+          "name": "ship_staging",
+          "rate": {
+            "type": "static",
+            "static_value": 2
+          }
+        }
+      ],
+      "required_resource": "stock_picking_cart"
     },
     {
       "name": "Ship",
       "duration": 1,
-      "rate": 3,
-      "input_queue": "ship_staging",
-      "output_queue": "shipped"
+      "input_queue_selection": {
+        "type": "all"
+      },
+      "input_queues": [
+        {
+          "name": "ship_staging",
+          "rate": {
+            "type": "static",
+            "static_value": 5
+          }
+        }
+      ],
+      "output_queue_selection": {
+        "type": "all"
+      },
+      "output_queues": [
+        {
+          "name": "shipped",
+          "rate": {
+            "type": "expression",
+            "expression": "lambda **kwargs : __import__('numpy').ceil((kwargs['now']/10) * kwargs['a'])",
+            "kwargs": {
+              "a": 2
+            }
+          }
+        }
+      ]
     }
   ],
   "queues": [
@@ -45,13 +99,13 @@
   ],
   "resources": [
     {
-      "name": "stock_picking_carts",
+      "name": "stock_picking_cart",
       "capacity": 2
     }
   ],
   "sim_def": {
-    "name": "Clock Sim",
-    "iterations": 100,
+    "name": "Pick and Ship Resource Constrained Simulation",
+    "epochs": 100,
     "time_unit": "seconds"
   }
 }

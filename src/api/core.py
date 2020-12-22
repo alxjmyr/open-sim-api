@@ -17,4 +17,8 @@ async def root() -> Dict[str, str]:
 
 @router.get("/health", response_model=CoreResponse)
 async def health_check() -> Dict[str, str]:
+    """
+    a call to /health will run a health check against the open-sim-api and will
+    return with 200 and an indicator of health if the api is up and operating normally
+    """
     return {"message": "The open sim service is running and healthy"}

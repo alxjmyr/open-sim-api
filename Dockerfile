@@ -1,4 +1,4 @@
-from python:3.7
+FROM python:3.7
 
 COPY ./src /app/src
 COPY ./setup.py /app/setup.py
