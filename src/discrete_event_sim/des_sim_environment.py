@@ -125,7 +125,9 @@ class DiscreteEventEnvironment(object):
             process_start = env.now
 
             if process_def.input_queues:
-                input_queue_list = process_def.get_queue_list(queue_set="input", env_queue_dict=self.queue_dict)
+                input_queue_list = process_def.get_queue_list(queue_set="input",
+                                                              env_queue_dict=self.queue_dict,
+                                                              now=env.now)
 
                 for queue in input_queue_list:
                     # calculate input rate
@@ -147,7 +149,9 @@ class DiscreteEventEnvironment(object):
                                                                                                time=env.now))
                     yield env.timeout(process_def.duration)
 
-            output_queue_list = process_def.get_queue_list(queue_set="output", env_queue_dict=self.queue_dict)
+            output_queue_list = process_def.get_queue_list(queue_set="output",
+                                                           env_queue_dict=self.queue_dict,
+                                                           now=env.now)
 
             for output_queue in output_queue_list:
                 # calculate output rate

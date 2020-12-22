@@ -3,6 +3,9 @@
     {
       "name": "Picker1",
       "duration": 1,
+      "output_queue_selection": {
+        "type": "all"
+      },
       "output_queues": [
         {
           "name": "ship_staging",
@@ -17,6 +20,9 @@
     {
       "name": "Picker2",
       "duration": 1,
+      "output_queue_selection": {
+        "type": "all"
+      },
       "output_queues": [
         {
           "name": "ship_staging",
@@ -31,6 +37,9 @@
     {
       "name": "Picker3",
       "duration": 1,
+      "output_queue_selection": {
+        "type": "all"
+      },
       "output_queues": [
         {
           "name": "ship_staging",
@@ -45,6 +54,9 @@
     {
       "name": "Ship",
       "duration": 1,
+      "input_queue_selection": {
+        "type": "all"
+      },
       "input_queues": [
         {
           "name": "ship_staging",
@@ -54,6 +66,9 @@
           }
         }
       ],
+      "output_queue_selection": {
+        "type": "all"
+      },
       "output_queues": [
         {
           "name": "shipped",

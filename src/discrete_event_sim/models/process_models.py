@@ -43,7 +43,7 @@ class ProcessQueue(BaseModel):
 
 
 class QueueSelectionModel(BaseModel):
-    type: str
+    type = "all"
     expression = ""
     kwargs: Dict[str, Any] = {}
     expression_callable: Optional[Callable[[Any], Union[int, float]]]
