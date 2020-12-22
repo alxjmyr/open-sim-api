@@ -17,29 +17,28 @@ agent based simulations in the future.
 
 ## Service Documentation and examples
 
-API documentation based on the open API spec is available at `/documentation` on a running instance of the Open Sim
-service
+API documentation based on the open API spec is available at `/docs` on a running instance of Open Sim Api.
 
-Example inputs for various simulations can be found in the sim_json_examples. You
+Example inputs for various simulations can be found in `/sim_json_examples/discrete_event_examples`.
 
 ## Discrete Event Simulation
 
-Open sim can create and run discrete event simulations using a `JSON` body in a request to compose the simulation
-structure and environment. At its core open sim approaches this by defining queues and processes. Queues serve as
-holding areas and processes move either discrete objects or continuous volumes between those queues. Currently, Open Sim
-only supports continuous queues and processes (i.e. moving 3 units or 3.75 units of something between queues with
-defined processes). In the future the intent is to support more complex object interactions where processes and queues
-can move discrete objects (these might represent items or individual boxes for example).
+Open sim can create and run discrete event simulations using a `JSON` body in a `POST` request to compose the simulation
+structure and environment. At its core open sim does this by defining queues and processes. Queues serve as holding
+areas and processes move either discrete objects or continuous volumes between those queues. Currently, Open Sim only
+supports continuous queues and processes (i.e. moving 3 units or 3.75 units of something between queues with defined
+processes). In the future the intent is to support more complex object interactions where processes and queues can move
+discrete objects (these might represent items or individual containers for example).
 
-Open sim also support applying resource constraints on processes. These can optionally be defined through a `resources`
-key in the input `JSON` if defined an optional key for `required_resource` can be applied to processes to require that
-process to access a resource before it can be executed. This can be used to model things like limited power equipment in
-a warehouse (i.e. a freight mover process must acquire access to a pallet jack before moving freight). There is an
-example of defining these resources in the `sim_json_examples` directory.
+Open sim also supports applying resource constraints on processes. These can optionally be defined through a `resources`
+object in the input `JSON` if defined an optional key for `required_resource` can be applied to a process to require
+that process to access a resource before it the process is executed. This can be used to model things like limited
+availability of equipment in a warehouse (i.e. a freight mover process must acquire access to a forklift before moving
+freight). There is an example of defining these resources in the `sim_json_examples` directory.
 
 Finally, at present processes can not interact directly. They can only acquire resources, and move volumes between
 queues. The intent would be to build these and other capabilities out long term to provide more fully featured
-simulation building capabilities.
+simulation capabilities.
 
 ### DES Example
 
@@ -59,6 +58,9 @@ Example POST Request: `http://localhost:8000/discrete-event/run-simulation`
     {
       "name": "Pick",
       "duration": 1,
+      "output_queue_selection": {
+        "type": "all"
+      },
       "output_queues": [
         {
           "name": "ship_staging",
@@ -72,6 +74,9 @@ Example POST Request: `http://localhost:8000/discrete-event/run-simulation`
     {
       "name": "Ship",
       "duration": 1,
+      "input_queue_selection": {
+        "type": "all"
+      },
       "input_queues": [
         {
           "name": "ship_staging",
@@ -81,6 +86,9 @@ Example POST Request: `http://localhost:8000/discrete-event/run-simulation`
           }
         }
       ],
+      "output_queue_selection": {
+        "type": "all"
+      },
       "output_queues": [
         {
           "name": "shipped",
