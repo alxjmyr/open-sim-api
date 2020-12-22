@@ -10,9 +10,14 @@ dependancies = [
 setup(
         name="OpenSim",
         version="0.1.0a",
+        description="JSON composable simulation as a service API for creating / running DES and other simulations",
         packages=find_packages(),
         install_requires=dependancies,
         author="Alex Meyer",
-        author_email="alex.j.meyer15@gmail.com",
+        author_email="alex@alxmyr.com",
+        maintainer="Alex Meyer",
+        maintainer_email="alex@alxmyr.com",
         url="https://github.com/alexjmeyer92/open-sim-api",
+        license='MIT',
+
 )

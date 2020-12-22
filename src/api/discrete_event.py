@@ -6,7 +6,7 @@ from src.discrete_event_sim.models.io_models import DesInputModel, DesResponseMo
 router: APIRouter = APIRouter()
 
 
-@router.post("/run-simulation", response_model=DesResponseModel)
+@router.post("/run-simulation", status_code=201, response_model=DesResponseModel)
 def run_discrete_event_simulation(sim_inputs: DesInputModel) -> DesResponseModel:
     """
     when posting to the /discrete-event/run-simulation endpoint the open-sim-api will take

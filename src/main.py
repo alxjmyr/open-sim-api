@@ -10,7 +10,7 @@ app: FastAPI = FastAPI(
         redoc_url="/docs"
 )
 
-app.include_router(core.router, tags=["core"])
+app.include_router(core.router, tags=["Core"])
 app.include_router(discrete_event.router, tags=["Discrete Event Simulation"], prefix="/discrete-event")
 
 if __name__ == '__main__':
