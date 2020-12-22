@@ -7,7 +7,16 @@ router: APIRouter = APIRouter()
 
 
 @router.post("/run-simulation", response_model=DesResponseModel)
-def run_de_simulation(sim_inputs: DesInputModel) -> DesResponseModel:
+def run_discrete_event_simulation(sim_inputs: DesInputModel) -> DesResponseModel:
+    """
+    when posting to the /discrete-event/run-simulation endpoint the open-sim-api will take
+    the JSON body provided in the request and will attempt to run a discrete event simulation
+    composed based on that input.
+
+    If successful it will return 201 along with a response body with the output of the simulation. If the input
+    provided in the request body is not of the expected structure it will return with 422 (validation error) along with
+    indication of where the validation error occurred.
+    """
     sim_env = DiscreteEventEnvironment(simulation_input=sim_inputs)
     sim_env.run_environment()
 

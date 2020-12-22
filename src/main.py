@@ -4,10 +4,10 @@ from src.api import core, discrete_event
 
 app: FastAPI = FastAPI(
         title="Open Sim",
-        description="Open Sim provides simulation as a service in a composeable HTTP API",
-        version="0.1.0alpha",
+        description="Open Sim provides simulation as a service in a composable HTTP API",
+        version="0.1.0a",
         docs_url=None,
-        redoc_url="/documentation"
+        redoc_url="/docs"
 )
 
 app.include_router(core.router, tags=["core"])

@@ -1,4 +1,3 @@
-import copy
 from typing import Dict, Generator, List
 from uuid import uuid4
 
@@ -26,7 +25,7 @@ class DiscreteEventEnvironment(object):
         self.append_process_output = self.process_output.append
         self.append_queue_output = self.queue_output.append
 
-    def env_establish_queues(self) -> None:
+    def env_init_queues(self) -> None:
 
         for queue in self.queue_input:
 
@@ -41,7 +40,7 @@ class DiscreteEventEnvironment(object):
 
                 self.queue_dict[queue.name] = new_queue
 
-    def env_establish_resources(self) -> None:
+    def env_init_resources(self) -> None:
         if self.resource_input:
             for resource in self.resource_input:
                 new_resource = BasicResource(
@@ -75,24 +74,15 @@ class DiscreteEventEnvironment(object):
 
                 for queue in process_def.input_queues:
                     # calculate input rate
-                    if queue.rate.type == "static":
-                        input_rate = queue.rate.static_value
-                    else:
-                        kwargs = copy.deepcopy(queue.rate.kwargs)
-                        kwargs["now"] = env.now
-                        input_rate = queue.rate.expression_callable(**kwargs)
+                    input_rate = queue.get_rate(now=env.now)
+
                     yield self.queue_dict[queue.name].get(input_rate)
 
             yield env.timeout(process_def.duration)
 
             for output_queue in process_def.output_queues:
                 # calculate output rate
-                if output_queue.rate.type == "static":
-                    output_rate = output_queue.rate.static_value
-                else:
-                    kwargs = copy.deepcopy(output_queue.rate.kwargs)
-                    kwargs["now"] = env.now
-                    output_rate = output_queue.rate.expression_callable(**kwargs)
+                output_rate = output_queue.get_rate(now=env.now)
 
                 yield self.queue_dict[output_queue.name].put(output_rate)
 
@@ -104,8 +94,7 @@ class DiscreteEventEnvironment(object):
                         process_end=process_end,
                         input_queue=process_def.input_queues,
                         output_queue=output_queue,
-                        rate=output_rate,
-                        process_value=output_rate,
+                        process_rate=output_rate,
                         configured_rate=output_rate,
                         configured_duration=process_def.duration,
                         uuid=uuid4()
@@ -121,12 +110,8 @@ class DiscreteEventEnvironment(object):
             if process_def.input_queues:
                 for queue in process_def.input_queues:
                     # calculate input rate
-                    if queue.rate.type == "static":
-                        input_rate = queue.rate.static_value
-                    else:
-                        kwargs = copy.deepcopy(queue.rate.kwargs)
-                        kwargs["now"] = env.now
-                        input_rate = queue.rate.expression_callable(**kwargs)
+                    input_rate = queue.get_rate(now=env.now)
+
                     yield self.queue_dict[queue.name].get(input_rate)
 
             if process_def.required_resource:
@@ -143,12 +128,7 @@ class DiscreteEventEnvironment(object):
 
             for output_queue in process_def.output_queues:
                 # calculate output rate
-                if output_queue.rate.type == "static":
-                    output_rate = output_queue.rate.static_value
-                else:
-                    kwargs = copy.deepcopy(output_queue.rate.kwargs)
-                    kwargs["now"] = env.now
-                    output_rate = output_queue.rate.expression_callable(**kwargs)
+                output_rate = output_queue.get_rate(now=env.now)
 
                 yield self.queue_dict[output_queue.name].put(output_rate)
 
@@ -160,8 +140,7 @@ class DiscreteEventEnvironment(object):
                         process_end=process_end,
                         input_queue=process_def.input_queues,
                         output_queue=output_queue,
-                        rate=output_rate,
-                        process_value=output_rate,
+                        process_rate=output_rate,
                         configured_rate=output_rate,
                         configured_duration=process_def.duration,
                         uuid=uuid4()
@@ -192,10 +171,10 @@ class DiscreteEventEnvironment(object):
 
     def run_environment(self) -> None:
         logger.info("Creating environment queues")
-        self.env_establish_queues()
+        self.env_init_queues()
 
         logger.info("Creating environment resources")
-        self.env_establish_resources()
+        self.env_init_resources()
 
         logger.info("Creating environment processes")
         self.env_add_processes()
