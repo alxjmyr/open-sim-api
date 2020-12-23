@@ -61,6 +61,8 @@ class InterruptArgsModel(BaseModel):
 
 class ProcessObject(BaseModel):
     # @todo figure out how to make processes interruptable (i.e. start time, stop time, or paused periods)
+    """This might require separating process inputs from an internal process model that can have attributes like
+    Paused, active, scheduled etc"""
     name: str
     duration: int
     interruptable: bool = False
