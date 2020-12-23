@@ -54,9 +54,17 @@ class QueueSelectionModel(BaseModel):
         return type
 
 
+class InterruptArgsModel(BaseModel):
+    start_time: int = 0
+    stop_time: int = 0
+
+
 class ProcessObject(BaseModel):
+    # @todo figure out how to make processes interruptable (i.e. start time, stop time, or paused periods)
     name: str
     duration: int
+    interruptable: bool = False
+    interrupt_args: Optional[InterruptArgsModel]
     input_queue_selection: Optional[QueueSelectionModel]
     input_queues: Optional[List[ProcessQueue]]
     output_queue_selection: QueueSelectionModel
