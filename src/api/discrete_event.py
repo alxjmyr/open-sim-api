@@ -20,8 +20,13 @@ def run_discrete_event_simulation(sim_inputs: DesInputModel) -> DesResponseModel
     sim_env = DiscreteEventEnvironment(simulation_input=sim_inputs)
     sim_env.run_environment()
 
+    processes = [v for k, v in sim_env.process_dict.items()]
+    process_output = []
+    for output in processes:
+        process_output.extend(output.process_outputs)
+
     output = DesResponseModel(
-            process_output=sim_env.process_output,
+            process_output=process_output,
             queue_output=sim_env.queue_output,
             sim_def=sim_env.sim_def
     )

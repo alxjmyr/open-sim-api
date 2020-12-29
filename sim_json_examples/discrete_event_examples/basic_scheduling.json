@@ -1,0 +1,44 @@
+{
+  "processes": [
+    {
+      "name": "producer",
+      "duration": 2,
+      "output_queue_selection": {
+        "type": "all"
+      },
+      "schedule_params": {
+        "interruptable": true,
+        "start_time": 5,
+        "stop_time": 16,
+        "interrupt_schedule": [
+          {
+            "start_time": 5,
+            "stop_time": 11
+          }
+        ]
+      },
+      "output_queues": [
+        {
+          "name": "output",
+          "rate": {
+            "type": "static",
+            "static_value": 5
+          }
+        }
+      ]
+    }
+  ],
+  "queues": [
+    {
+      "name": "output",
+      "capacity": 10000,
+      "inital_value": 0,
+      "queue_type": "continuous"
+    }
+  ],
+  "sim_def": {
+    "name": "Pick and Ship Simulation",
+    "epochs": 100,
+    "time_unit": "seconds"
+  }
+}
