@@ -95,6 +95,7 @@ class ProcessOutput(BaseModel):
     process_rate: float
     configured_rate: float
     configured_duration: int
+    process_duration: int
     uuid: UUID
 
 
@@ -212,6 +213,7 @@ class ProcessObject(BaseModel):
                                 process_rate=output_rate,
                                 configured_rate=output_rate,
                                 configured_duration=self.duration,
+                                process_duration=output_end - process_start,
                                 uuid=uuid4()
                         )
                         self.process_outputs.append(process_output)
@@ -224,35 +226,48 @@ class ProcessObject(BaseModel):
         Similar to the execute method above this is created / used as a simpy process
         """
         while True:
-            process_start = self.env.now
-            self.process_input()
-            with self.env_resource_dict[self.required_resource].request() as request:
-                yield request
+            if not self.is_scheduled and not self.current_task:
+                yield self.env.timeout(1)
+            else:
+                if self.is_paused and not self.current_task:
+                    yield self.env.timeout(1)
+                elif not self.is_paused and self.current_duration == 0:
+                    self.current_task = True
+                    process_start = self.env.now
+                    self.process_input()
 
-                logger.debug('{process} has {resource} executing process || {time}'.format(process=self.name,
-                                                                                           resource=self.required_resource,
-                                                                                           time=self.env.now))
-                yield self.env.timeout(self.duration)
+                    with self.env_resource_dict[self.required_resource].request() as request:
+                        yield request
+                        logger.debug('{process} has {resource} executing process || {time}'.format(process=self.name,
+                                                                                                   resource=self.required_resource,
+                                                                                                   time=self.env.now))
+                        self.current_duration += self.duration
+                        yield self.env.timeout(self.duration)
 
-            output_queue_list = self._get_queue_list(queue_set="output",
-                                                     now=self.env.now)
-            for queue in output_queue_list:
-                # calculate output rate
-                output_rate = queue.get_rate(now=self.env.now)
+            if self.current_duration == self.duration:
 
-                yield self.env_queue_dict[queue.name].put(output_rate)
+                output_queue_list = self._get_queue_list(queue_set="output",
+                                                         now=self.env.now)
+                for queue in output_queue_list:
+                    # calculate output rate
+                    output_rate = queue.get_rate(now=self.env.now)
 
-                output_end = self.env.now
+                    yield self.env_queue_dict[queue.name].put(output_rate)
 
-                process_output = ProcessOutput(
-                        name=self.name,
-                        process_start=process_start,
-                        process_end=output_end,
-                        input_queue=deepcopy(self.current_input_queues),
-                        output_queue=[queue],
-                        process_rate=output_rate,
-                        configured_rate=output_rate,
-                        configured_duration=self.duration,
-                        uuid=uuid4()
-                )
-                self.process_outputs.append(process_output)
+                    output_end = self.env.now
+
+                    process_output = ProcessOutput(
+                            name=self.name,
+                            process_start=process_start,
+                            process_end=output_end,
+                            input_queue=deepcopy(self.current_input_queues),
+                            output_queue=[queue],
+                            process_rate=output_rate,
+                            configured_rate=output_rate,
+                            configured_duration=self.duration,
+                            process_duration=output_end - process_start,
+                            uuid=uuid4()
+                    )
+                    self.process_outputs.append(process_output)
+                    self.current_duration = 0
+                    self.current_task = False
