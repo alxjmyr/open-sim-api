@@ -9,7 +9,7 @@ dependancies = [
 
 setup(
         name="OpenSim",
-        version="0.1.0a",
+        version="0.1.0",
         description="JSON composable simulation as a service API for creating / running DES and other simulations",
         packages=find_packages(),
         install_requires=dependancies,
