@@ -92,7 +92,7 @@ def test_des():
 
     assert "process_output" in data.keys()
     assert type(data['process_output']) == list
-    assert len(data['process_output']) == 48
+    assert len(data['process_output']) == 46
 
     assert "queue_output" in data.keys()
     assert type(data['queue_output']) == list

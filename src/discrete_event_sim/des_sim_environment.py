@@ -21,6 +21,7 @@ class DiscreteEventEnvironment(object):
         self.simpy_env = Environment()
         self.queue_dict: Dict[str, ContinuousQueue] = {}
         self.resource_dict: Dict[str, BasicResource] = {}
+        self.process_dict: Dict[str, ProcessObject] = {}
         self.process_output: List[ProcessOutput] = []
         self.queue_output: List[QueueStateOutput] = []
         self.append_process_output = self.process_output.append
@@ -51,7 +52,7 @@ class DiscreteEventEnvironment(object):
                 )
                 self.resource_dict[resource.name] = new_resource
 
-    def _check_queue_state(self, env: Environment) -> Generator:
+    def check_queue_state(self, env: Environment) -> Generator:
         while True:
             for name, queue in self.queue_dict.items():
                 if queue.capacity == cinf:
@@ -71,134 +72,82 @@ class DiscreteEventEnvironment(object):
                 self.append_queue_output(queue_state)
             yield env.timeout(1)
 
-    def _process_wrapper(self, env: Environment, process_def: ProcessObject) -> Generator:
+    def process_manager(self, ):
+        """
+        The process manager uses the interrupt args from the simulation inputs to reschedule & or pause processes
+        """
         while True:
-            logger.debug('{process} || {time}'.format(process=process_def.name, time=env.now))
-            # get necessary amount from input queue
-            process_start = env.now
-            if process_def.input_queues:
-                input_queue_list = process_def.get_queue_list(queue_set="input",
-                                                              env_queue_dict=self.queue_dict,
-                                                              now=env.now
-                                                              )
-
-                for queue in input_queue_list:
-                    # calculate input rate
-                    input_rate = queue.get_rate(now=env.now)
-
-                    yield self.queue_dict[queue.name].get(input_rate)
-            else:
-                input_queue_list = None
-
-            yield env.timeout(process_def.duration)
-
-            output_queue_list = process_def.get_queue_list(queue_set="output",
-                                                           env_queue_dict=self.queue_dict,
-                                                           now=env.now
-                                                           )
-
-            for output_queue in output_queue_list:
-                # calculate output rate
-                output_rate = output_queue.get_rate(now=env.now)
-
-                yield self.queue_dict[output_queue.name].put(output_rate)
-
-                process_end = env.now
-
-                process_output = ProcessOutput(
-                        name=process_def.name,
-                        process_start=process_start,
-                        process_end=process_end,
-                        input_queue=input_queue_list,
-                        output_queue=output_queue_list,
-                        process_rate=output_rate,
-                        configured_rate=output_rate,
-                        configured_duration=process_def.duration,
-                        uuid=uuid4()
-                )
-                self.append_process_output(process_output)
-
-    def _resource_constrained_process_wrapper(self, env: Environment, process_def: ProcessObject) -> Generator:
-        while True:
-            logger.debug('{process} || {time}'.format(process=process_def.name, time=env.now))
-
-            process_start = env.now
-
-            if process_def.input_queues:
-                input_queue_list = process_def.get_queue_list(queue_set="input",
-                                                              env_queue_dict=self.queue_dict,
-                                                              now=env.now)
-
-                for queue in input_queue_list:
-                    # calculate input rate
-                    input_rate = queue.get_rate(now=env.now)
-
-                    yield self.queue_dict[queue.name].get(input_rate)
-            else:
-                input_queue_list = None
-
-            if process_def.required_resource:
-                logger.debug('{process} acquiring {resource} || {time}'.format(process=process_def.name,
-                                                                               resource=process_def.required_resource,
-                                                                               time=env.now))
-                with self.resource_dict[process_def.required_resource].request() as request:
-                    yield request
-
-                    logger.debug('{process} has {resource} executing process || {time}'.format(process=process_def.name,
-                                                                                               resource=process_def.required_resource,
-                                                                                               time=env.now))
-                    yield env.timeout(process_def.duration)
-
-            output_queue_list = process_def.get_queue_list(queue_set="output",
-                                                           env_queue_dict=self.queue_dict,
-                                                           now=env.now)
-
-            for output_queue in output_queue_list:
-                # calculate output rate
-                output_rate = output_queue.get_rate(now=env.now)
-
-                yield self.queue_dict[output_queue.name].put(output_rate)
-
-                process_end = env.now
-
-                process_output = ProcessOutput(
-                        name=process_def.name,
-                        process_start=process_start,
-                        process_end=process_end,
-                        input_queue=input_queue_list,
-                        output_queue=output_queue_list,
-                        process_rate=output_rate,
-                        configured_rate=output_rate,
-                        configured_duration=process_def.duration,
-                        uuid=uuid4()
-                )
-                self.append_process_output(process_output)
+            now = self.simpy_env.now
+            for k, v in self.process_dict.items():
+                schedule_params = v.schedule_params
+                # update scheduled flag
+                if not schedule_params or schedule_params.interruptable is False:
+                    v.is_scheduled = True
+                    v.is_paused = False
+                else:
+                    if schedule_params.start_time <= now <= schedule_params.stop_time:
+                        v.is_scheduled = True
+                    elif now > schedule_params.stop_time:
+                        v.is_scheduled = False
+                # update paused flag
+                if schedule_params:
+                    if schedule_params.interrupt_schedule:
+                        for idx, interrupt in enumerate(schedule_params.interrupt_schedule):
+                            if interrupt.stop_time < now:
+                                v.is_paused = False
+                                schedule_params.interrupt_schedule.pop(idx)
+                            elif interrupt.start_time <= now <= interrupt.stop_time:
+                                v.is_paused = True
+                                interrupt.in_progress = True
+            yield self.simpy_env.timeout(1)
 
     def env_setup_processes(self) -> None:
         for process in self.process_input:
-            # setup inputs
-            if process.input_queues:
-                for input_queue in process.input_queues:
+            # create process objects
+            new_process = ProcessObject(name=process.name,
+                                        duration=process.duration,
+                                        schedule_params=process.schedule_params,
+                                        input_queue_selection=process.input_queue_selection,
+                                        input_queues=process.input_queues,
+                                        output_queue_selection=process.output_queue_selection,
+                                        output_queues=process.output_queues,
+                                        required_resource=process.required_resource,
+                                        env=self.simpy_env,
+                                        env_queue_dict=self.queue_dict,
+                                        env_resource_dict=self.resource_dict,
+                                        process_outputs=self.process_output,
+                                        is_scheduled=False,
+                                        is_paused=False)
+            if new_process.input_queues:
+                for input_queue in new_process.input_queues:
                     if input_queue.rate.type == "expression":
+                        # @todo figure out a way to deal with expression and logic injection that is cleaner and more secure than using lambda functions
                         input_queue.rate.expression_callable = eval(input_queue.rate.expression)
-                if process.input_queue_selection.type == "expression":
-                    process.input_queue_selection.expression_callable = eval(process.input_queue_selection.expression)
-
+                if new_process.input_queue_selection.type == "expression":
+                    # @todo figure out a way to deal with expression and logic injection that is cleaner and more secure than using lambda functions
+                    new_process.input_queue_selection.expression_callable = eval(
+                            new_process.input_queue_selection.expression)
             # setup outputs
-            if process.output_queues:
-                for output in process.output_queues:
+            if new_process.output_queues:
+                for output in new_process.output_queues:
                     if output.rate.type == "expression":
+                        # @todo figure out a way to deal with expression and logic injection that is cleaner and more secure than using lambda functions
                         output.rate.expression_callable = eval(output.rate.expression)
-                if process.output_queue_selection.type == "expression":
-                    process.output_queue_selection.expression_callable = eval(process.output_queue_selection.expression)
+                if new_process.output_queue_selection.type == "expression":
+                    # @todo figure out a way to deal with expression and logic injection that is cleaner and more secure than using lambda functions
+                    new_process.output_queue_selection.expression_callable = eval(
+                            new_process.output_queue_selection.expression)
 
-            # setup resources
-            if process.required_resource:
+            self.process_dict[new_process.name] = new_process
+
+            if new_process.required_resource:
                 self.simpy_env.process(
-                        self._resource_constrained_process_wrapper(env=self.simpy_env, process_def=process)
+                        new_process.execute_resource_constrained()
                 )
             else:
-                self.simpy_env.process(self._process_wrapper(env=self.simpy_env, process_def=process))
+                self.simpy_env.process(
+                        new_process.execute()
+                )
 
     def run_environment(self) -> None:
         logger.info("Creating environment queues")
@@ -210,8 +159,11 @@ class DiscreteEventEnvironment(object):
         logger.info("Creating environment processes")
         self.env_setup_processes()
 
+        logger.info("Creating Process Manager")
+        self.simpy_env.process(self.process_manager())
+
         logger.info("Setting up queue state logger")
-        self.simpy_env.process(self._check_queue_state(env=self.simpy_env))
+        self.simpy_env.process(self.check_queue_state(env=self.simpy_env))
 
         logger.info("Running Simulation Environment for {n} epochs".format(n=self.sim_def.epochs))
         self.simpy_env.run(until=self.sim_def.epochs)
