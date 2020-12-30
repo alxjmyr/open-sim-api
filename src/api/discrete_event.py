@@ -28,6 +28,7 @@ def run_discrete_event_simulation(sim_inputs: DesInputModel) -> DesResponseModel
     output = DesResponseModel(
             process_output=process_output,
             queue_output=sim_env.queue_output,
+            resource_output=sim_env.resource_output,
             sim_def=sim_env.sim_def
     )
     return output

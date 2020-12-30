@@ -10,6 +10,7 @@ from .des_resources import BasicResource
 from .models.io_models import DesInputModel
 from .models.process_models import ProcessObject, ProcessOutput
 from .models.queue_models import QueueStateOutput
+from .models.resource_models import ResouceOutput
 
 
 class DiscreteEventEnvironment(object):
@@ -24,8 +25,10 @@ class DiscreteEventEnvironment(object):
         self.process_dict: Dict[str, ProcessObject] = {}
         self.process_output: List[ProcessOutput] = []
         self.queue_output: List[QueueStateOutput] = []
+        self.resource_output: List[ResouceOutput] = []
         self.append_process_output = self.process_output.append
         self.append_queue_output = self.queue_output.append
+        self.append_resource_output = self.resource_output.append
 
     def env_init_queues(self) -> None:
 
@@ -52,7 +55,7 @@ class DiscreteEventEnvironment(object):
                 )
                 self.resource_dict[resource.name] = new_resource
 
-    def check_queue_state(self, env: Environment) -> Generator:
+    def log_queue_state(self) -> Generator:
         while True:
             for name, queue in self.queue_dict.items():
                 if queue.capacity == cinf:
@@ -65,12 +68,27 @@ class DiscreteEventEnvironment(object):
                         capacity=capacity,
                         current_value=queue.level,
                         queue_type='continuous',
-                        sim_epoch=env.now,
+                        sim_epoch=self.simpy_env.now,
                         uuid=uuid4()
                 )
 
                 self.append_queue_output(queue_state)
-            yield env.timeout(1)
+            yield self.simpy_env.timeout(1)
+
+    def log_resource_state(self) -> Generator:
+        while True:
+            for name, resource in self.resource_dict.items():
+                resource_state = ResouceOutput(
+                        name=resource.name,
+                        sim_epoch=self.simpy_env.now,
+                        capacity=resource.capacity,
+                        current_utilization=resource.count,
+                        processes_in_queue=len(resource.queue),
+                        uuid=uuid4()
+                )
+
+                self.append_resource_output(resource_state)
+            yield self.simpy_env.timeout(1)
 
     def process_manager(self, ):
         """
@@ -163,7 +181,10 @@ class DiscreteEventEnvironment(object):
         self.simpy_env.process(self.process_manager())
 
         logger.info("Setting up queue state logger")
-        self.simpy_env.process(self.check_queue_state(env=self.simpy_env))
+        self.simpy_env.process(self.log_queue_state())
+
+        logger.info("Setting up resource state logger")
+        self.simpy_env.process(self.log_resource_state())
 
         logger.info("Running Simulation Environment for {n} epochs".format(n=self.sim_def.epochs))
         self.simpy_env.run(until=self.sim_def.epochs)

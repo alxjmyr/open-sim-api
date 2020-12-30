@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel
 
 
@@ -5,3 +7,12 @@ from pydantic import BaseModel
 class BasicResource(BaseModel):
     name: str
     capacity: int
+
+
+class ResouceOutput(BaseModel):
+    name: str
+    sim_epoch: int
+    capacity: int
+    current_utilization: int
+    processes_in_queue: int
+    uuid: UUID
