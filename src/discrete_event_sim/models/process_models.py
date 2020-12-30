@@ -122,6 +122,7 @@ class ProcessObject(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
+
     def _get_queue_list(self, queue_set: str, now: float) -> List[
         ProcessQueue]:
         """
@@ -186,7 +187,19 @@ class ProcessObject(BaseModel):
                     # process the first minute of the process execution
                     self.current_task = True
                     process_start = self.env.now
-                    self.process_input()
+
+                    # @todo figure out why input processing needed to be moved up out of a separate function to update queues correctly
+                    # it potentially could be because the call to self.process_input() didn't have a yield for the generator it returns?
+                    self.current_input_queues = None
+                    if self.input_queues:
+                        self.current_input_queues = self._get_queue_list(queue_set="input",
+                                                                         now=self.env.now)
+                        for queue in self.current_input_queues:
+                            # calculate input rate
+                            input_rate = queue.get_rate(now=self.env.now)
+
+                            yield self.env_queue_dict[queue.name].get(input_rate)
+
                     self.current_duration += 1
                     yield self.env.timeout(1)
                 elif self.current_duration < self.duration:
@@ -234,7 +247,17 @@ class ProcessObject(BaseModel):
                 elif not self.is_paused and self.current_duration == 0:
                     self.current_task = True
                     process_start = self.env.now
-                    self.process_input()
+
+                    self.current_input_queues = None
+                    if self.input_queues:
+                        self.current_input_queues = self._get_queue_list(queue_set="input",
+                                                                         now=self.env.now)
+                        for queue in self.current_input_queues:
+                            # calculate input rate
+                            input_rate = queue.get_rate(now=self.env.now)
+
+                            yield self.env_queue_dict[queue.name].get(input_rate)
+
 
                     with self.env_resource_dict[self.required_resource].request() as request:
                         yield request
