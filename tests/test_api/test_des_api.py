@@ -98,6 +98,10 @@ def test_des():
     assert type(data['queue_output']) == list
     assert len(data['queue_output']) == 50
 
+    assert "resource_output" in data.keys()
+    assert type(data["resource_output"]) == list
+    assert len(data["resource_output"]) == 0
+
     assert "sim_def" in data.keys()
     assert type(data['sim_def']) == dict
     assert len(data['sim_def']) == 3

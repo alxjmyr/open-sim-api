@@ -92,7 +92,7 @@
     },
     {
       "name": "ship_staging",
-      "capacity": 200,
+      "capacity": 400,
       "inital_value": 30,
       "queue_type": "continuous"
     }
@@ -100,7 +100,7 @@
   "resources": [
     {
       "name": "stock_picking_cart",
-      "capacity": 2
+      "capacity": 3
     }
   ],
   "sim_def": {
