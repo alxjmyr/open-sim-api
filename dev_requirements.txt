@@ -1,2 +1,4 @@
 mypy==0.780
 pytest-cov==2.9.0
+plotly
+pandas
