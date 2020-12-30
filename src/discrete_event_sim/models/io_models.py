@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from .process_models import ProcessInput, ProcessOutput
 from .queue_models import QueueInput, QueueStateOutput
-from .resource_models import BasicResource
+from .resource_models import BasicResource, ResouceOutput
 from .sim_models import SimInfo
 
 
@@ -18,4 +18,5 @@ class DesInputModel(BaseModel):
 class DesResponseModel(BaseModel):
     process_output: List[ProcessOutput]
     queue_output: List[QueueStateOutput]
+    resource_output: List[ResouceOutput]
     sim_def: SimInfo
