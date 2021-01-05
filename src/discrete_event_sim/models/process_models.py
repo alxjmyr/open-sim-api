@@ -46,7 +46,6 @@ class ProcessQueue(BaseModel):
 
 
 class QueueSelectionModel(BaseModel):
-    # @todo should also be able to process queues in sequence / priority (i.e. queue 1 then when nothing available due 2, etc)
     type = "all"
     expression = ""
     kwargs: Dict[str, Any] = {}
@@ -138,6 +137,10 @@ class ProcessObject(BaseModel):
         if queue_set == "input":
             if self.input_queue_selection.type == "all":
                 return deepcopy(self.input_queues)
+            elif self.input_queue_selection.type == "sequential":
+                for queue in self.input_queues:
+                    if self.env_queue_dict[queue.name].level > 0:
+                        return deepcopy([queue])
             elif self.input_queue_selection.type == "expression":
                 queues = deepcopy(self.input_queues)
                 kwargs = deepcopy(self.input_queue_selection.kwargs)
@@ -149,6 +152,10 @@ class ProcessObject(BaseModel):
         elif queue_set == "output":
             if self.output_queue_selection.type == "all":
                 return deepcopy(self.output_queues)
+            elif self.output_queue_selection.type == "sequential":
+                for queue in self.output_queues:
+                    if self.env_queue_dict[queue.name].level > 0:
+                        return deepcopy([queue])
             elif self.output_queue_selection.type == "expression":
                 queues = deepcopy(self.output_queues)
                 kwargs = deepcopy(self.output_queue_selection.kwargs)
