@@ -122,8 +122,7 @@ class ProcessObject(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-
-    def _get_queue_list(self, queue_set: str, now: float) -> List[
+    def _get_queue_list(self, queue_set: str, now: float, input_selection: int = 0) -> List[
         ProcessQueue]:
         """
         determines using queue selection params which queues will be used in the
@@ -153,6 +152,9 @@ class ProcessObject(BaseModel):
             elif self.output_queue_selection.type == "expression":
                 queues = deepcopy(self.output_queues)
                 kwargs = deepcopy(self.output_queue_selection.kwargs)
+                kwargs["queue_reference"] = self.env_queue_dict
+                kwargs["now"] = now
+                kwargs["input_selection"] = input_selection
                 index = self.output_queue_selection.expression_callable(**kwargs)
                 return [queues[index]]
 
@@ -257,7 +259,6 @@ class ProcessObject(BaseModel):
                             input_rate = queue.get_rate(now=self.env.now)
 
                             yield self.env_queue_dict[queue.name].get(input_rate)
-
 
                     with self.env_resource_dict[self.required_resource].request() as request:
                         yield request
