@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Any, Callable, Dict, Generator, List, Optional, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, validator
@@ -46,7 +46,6 @@ class ProcessQueue(BaseModel):
 
 
 class QueueSelectionModel(BaseModel):
-    # @todo should also be able to process queues in sequence / priority (i.e. queue 1 then when nothing available due 2, etc)
     type = "all"
     expression = ""
     kwargs: Dict[str, Any] = {}
@@ -122,9 +121,7 @@ class ProcessObject(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-
-    def _get_queue_list(self, queue_set: str, now: float) -> List[
-        ProcessQueue]:
+    def _get_queue_list(self, queue_set: str, now: float, input_selection: int = 0) -> Tuple[List[ProcessQueue], int]:
         """
         determines using queue selection params which queues will be used in the
         execution of the process
@@ -138,38 +135,34 @@ class ProcessObject(BaseModel):
         """
         if queue_set == "input":
             if self.input_queue_selection.type == "all":
-                return deepcopy(self.input_queues)
+                return deepcopy(self.input_queues), -1
+            elif self.input_queue_selection.type == "sequential":
+                for index, queue in enumerate(self.input_queues):
+                    if self.env_queue_dict[queue.name].level > 0:
+                        return deepcopy([queue]), index
             elif self.input_queue_selection.type == "expression":
                 queues = deepcopy(self.input_queues)
                 kwargs = deepcopy(self.input_queue_selection.kwargs)
                 kwargs["queue_reference"] = self.env_queue_dict
                 kwargs["now"] = now
                 index = self.input_queue_selection.expression_callable(**kwargs)
-                return [queues[index]]
+                return [queues[index]], index
 
         elif queue_set == "output":
             if self.output_queue_selection.type == "all":
-                return deepcopy(self.output_queues)
+                return deepcopy(self.output_queues), -1
+            elif self.output_queue_selection.type == "sequential":
+                for index, queue in enumerate(self.output_queues):
+                    if self.env_queue_dict[queue.name].level > 0:
+                        return deepcopy([queue]), index
             elif self.output_queue_selection.type == "expression":
                 queues = deepcopy(self.output_queues)
                 kwargs = deepcopy(self.output_queue_selection.kwargs)
+                kwargs["queue_reference"] = self.env_queue_dict
+                kwargs["now"] = now
+                kwargs["input_selection"] = input_selection
                 index = self.output_queue_selection.expression_callable(**kwargs)
-                return [queues[index]]
-
-    def process_input(self, ) -> Generator:
-        """
-        process input will execute at the begining of the process to update the simulation environment based on the
-        input references / data provided in the process object
-        """
-        self.current_input_queues = None
-        if self.input_queues:
-            self.current_input_queues = self._get_queue_list(queue_set="input",
-                                                             now=self.env.now)
-            for queue in self.current_input_queues:
-                # calculate input rate
-                input_rate = queue.get_rate(now=self.env.now)
-
-                yield self.env_queue_dict[queue.name].get(input_rate)
+                return [queues[index]], index
 
     def execute(self, ) -> Generator:
         """
@@ -191,9 +184,10 @@ class ProcessObject(BaseModel):
                     # @todo figure out why input processing needed to be moved up out of a separate function to update queues correctly
                     # it potentially could be because the call to self.process_input() didn't have a yield for the generator it returns?
                     self.current_input_queues = None
+                    input_index = -1
                     if self.input_queues:
-                        self.current_input_queues = self._get_queue_list(queue_set="input",
-                                                                         now=self.env.now)
+                        self.current_input_queues, input_index = self._get_queue_list(queue_set="input",
+                                                                                      now=self.env.now)
                         for queue in self.current_input_queues:
                             # calculate input rate
                             input_rate = queue.get_rate(now=self.env.now)
@@ -207,8 +201,9 @@ class ProcessObject(BaseModel):
                     yield self.env.timeout(1)
 
                 if self.current_duration == self.duration:
-                    output_queue_list = self._get_queue_list(queue_set="output",
-                                                             now=self.env.now)
+                    output_queue_list, output_index = self._get_queue_list(queue_set="output",
+                                                                           now=self.env.now,
+                                                                           input_selection=input_index)
                     for queue in output_queue_list:
                         # calculate output rate
                         output_rate = queue.get_rate(now=self.env.now)
@@ -249,15 +244,15 @@ class ProcessObject(BaseModel):
                     process_start = self.env.now
 
                     self.current_input_queues = None
+                    input_index = -1
                     if self.input_queues:
-                        self.current_input_queues = self._get_queue_list(queue_set="input",
-                                                                         now=self.env.now)
+                        self.current_input_queues, input_index = self._get_queue_list(queue_set="input",
+                                                                                      now=self.env.now)
                         for queue in self.current_input_queues:
                             # calculate input rate
                             input_rate = queue.get_rate(now=self.env.now)
 
                             yield self.env_queue_dict[queue.name].get(input_rate)
-
 
                     with self.env_resource_dict[self.required_resource].request() as request:
                         yield request
@@ -269,8 +264,9 @@ class ProcessObject(BaseModel):
 
             if self.current_duration == self.duration:
 
-                output_queue_list = self._get_queue_list(queue_set="output",
-                                                         now=self.env.now)
+                output_queue_list, output_index = self._get_queue_list(queue_set="output",
+                                                                       now=self.env.now,
+                                                                       input_selection=input_index)
                 for queue in output_queue_list:
                     # calculate output rate
                     output_rate = queue.get_rate(now=self.env.now)
