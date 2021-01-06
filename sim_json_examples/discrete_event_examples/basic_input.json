@@ -44,29 +44,6 @@
         }
       ]
     }
-    {
-      "name": "Ship2",
-      "duration": 1,
-      "interruptable": true,
-      "interrupt_args": {
-        "start_time": 5,
-        "stop_time": 25
-      },
-      "input_queue_selection": {
-        "type": "all"
-      },
-      "input_queues": [
-        "name"
-        :
-        "ship_staging",
-        "rate"
-        :
-        {
-          "type": "static",
-          "static_value": 2
-        }
-      ]
-    }
   ],
   "queues": [
     {

@@ -14,7 +14,7 @@ class RateDurationModel(BaseModel):
     type: str
     static_value: Optional[Union[int, float]]
     expression = ""
-    kwargs: Optional[Dict[str, Union[int, float]]]
+    kwargs: Optional[Dict[str, Union[float, int]]]
     expression_callable: Optional[Callable[[Union[int, float]], Union[int, float]]]
 
     @validator('type')
@@ -27,7 +27,7 @@ class ProcessQueue(BaseModel):
     name: str
     rate: RateDurationModel
 
-    def get_rate(self, now: float) -> Union[int, float]:
+    def get_rate(self, now: float, input_value: float = -1.0) -> Union[int, float]:
         """
         For an instance of ProcessQueue get_rate() will calculate and return the
         production rate for that process queue
@@ -38,6 +38,7 @@ class ProcessQueue(BaseModel):
         elif self.rate.type == "expression":
             kwargs = deepcopy(self.rate.kwargs)
             kwargs['now'] = now
+            kwargs['input_value'] = input_value
             rate = self.rate.expression_callable(**kwargs)
         else:
             rate = 0
@@ -185,6 +186,7 @@ class ProcessObject(BaseModel):
                     # it potentially could be because the call to self.process_input() didn't have a yield for the generator it returns?
                     self.current_input_queues = None
                     input_index = -1
+                    input_rate = -1.0
                     if self.input_queues:
                         self.current_input_queues, input_index = self._get_queue_list(queue_set="input",
                                                                                       now=self.env.now)
@@ -206,7 +208,7 @@ class ProcessObject(BaseModel):
                                                                            input_selection=input_index)
                     for queue in output_queue_list:
                         # calculate output rate
-                        output_rate = queue.get_rate(now=self.env.now)
+                        output_rate = queue.get_rate(now=self.env.now, input_value=input_rate)
 
                         yield self.env_queue_dict[queue.name].put(output_rate)
 
@@ -245,6 +247,7 @@ class ProcessObject(BaseModel):
 
                     self.current_input_queues = None
                     input_index = -1
+                    input_rate = -1.0
                     if self.input_queues:
                         self.current_input_queues, input_index = self._get_queue_list(queue_set="input",
                                                                                       now=self.env.now)
@@ -269,7 +272,7 @@ class ProcessObject(BaseModel):
                                                                        input_selection=input_index)
                 for queue in output_queue_list:
                     # calculate output rate
-                    output_rate = queue.get_rate(now=self.env.now)
+                    output_rate = queue.get_rate(now=self.env.now, input_value=input_rate)
 
                     yield self.env_queue_dict[queue.name].put(output_rate)
 
