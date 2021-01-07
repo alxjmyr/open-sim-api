@@ -50,7 +50,7 @@ class QueueSelectionModel(BaseModel):
     type = "all"
     expression = ""
     kwargs: Dict[str, Any] = {}
-    expression_callable: Optional[Callable[[Any], Union[int, float]]]
+    expression_callable: Callable[[Dict[str, Any]], Union[int, float]] = lambda **kwargs: 1
 
     @validator('type')
     def queue_type_validator(cls, type: str) -> str:

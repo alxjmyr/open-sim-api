@@ -59,7 +59,7 @@ class DiscreteEventEnvironment(object):
         while True:
             for name, queue in self.queue_dict.items():
                 if queue.capacity == cinf:
-                    capacity = -1
+                    capacity = float(-1)
                 else:
                     capacity = queue.capacity
 
@@ -90,7 +90,7 @@ class DiscreteEventEnvironment(object):
                 self.append_resource_output(resource_state)
             yield self.simpy_env.timeout(1)
 
-    def process_manager(self, ):
+    def process_manager(self, ) -> Generator:
         """
         The process manager uses the interrupt args from the simulation inputs to reschedule & or pause processes
         """
