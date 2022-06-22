@@ -4,7 +4,7 @@ dependancies = [
     'fastapi[all]==0.63.0',
     'simpy==4.0.1',
     'uvicorn >= 0.13.0',
-    'numpy==1.19.4'
+    'numpy==1.22.0'
 ]
 
 setup(
